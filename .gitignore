@@ -1,7 +1,7 @@
 .gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
+xyzreader2/local.properties
+xyzreader2/.idea/workspace.xml
+xyzreader2/.idea/libraries
 .DS_Store
 build/
 captures/
