@@ -23,4 +23,5 @@
     <color name="theme_accent">#04561A</color>
     <color name="ltgray">#ffe0e0e0</color>
     <color name="logo_orange">#F84621</color>
+    <color name="black">#000</color>
 </resources>

@@ -58,7 +58,9 @@
                     android:minHeight="56dp"
                     android:scaleType="centerInside"
                     android:baselineAlignBottom="false"
-                    app:layout_collapseMode="pin" />
+                    app:layout_collapseMode="pin"
+
+                    />
 
             </android.support.v7.widget.Toolbar>
         </android.support.design.widget.CollapsingToolbarLayout>

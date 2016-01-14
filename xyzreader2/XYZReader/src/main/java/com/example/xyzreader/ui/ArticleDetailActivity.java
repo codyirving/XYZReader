@@ -148,6 +148,7 @@ public class ArticleDetailActivity extends ActionBarActivity
 
     private void updateUpButtonPosition() {
         int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
+        System.out.println("mTopInset: " + mTopInset + " mUpButtonHeight: " + mUpButton.getHeight() + " mSelectedItemUpButtonFloor: " + mSelectedItemUpButtonFloor);
         mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
     }
 
