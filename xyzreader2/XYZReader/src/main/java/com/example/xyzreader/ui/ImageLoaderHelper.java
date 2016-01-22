@@ -27,13 +27,17 @@ public class ImageLoaderHelper {
         ImageLoader.ImageCache imageCache = new ImageLoader.ImageCache() {
             @Override
             public void putBitmap(String key, Bitmap value) {
+                System.out.println("mImageCache.put(" + key + "," + value);
                 mImageCache.put(key, value);
             }
 
             @Override
             public Bitmap getBitmap(String key) {
+
+
                 return mImageCache.get(key);
             }
+
         };
         mImageLoader = new ImageLoader(queue, imageCache);
     }

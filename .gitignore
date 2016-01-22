@@ -5,3 +5,4 @@ xyzreader2/.idea/libraries
 .DS_Store
 build/
 captures/
+xyzreader2/XYZReader/src/main/res/layout/test.xml

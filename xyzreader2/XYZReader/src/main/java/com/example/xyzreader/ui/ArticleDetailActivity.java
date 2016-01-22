@@ -1,16 +1,21 @@
 package com.example.xyzreader.ui;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.transition.TransitionManager;
+import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,13 +44,41 @@ public class ArticleDetailActivity extends ActionBarActivity
     private View mUpButton;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+                //    View.SYSTEM_UI_FLAG_FULLSCREEN | // removed per forum advice
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            );
         }
+
+//        Runnable mNavHider = new Runnable() {
+//            @Override public void run() {
+//                setNavVisibility(false);
+//            }
+//        };
+//        void setNavVisibility(boolean visible) {
+//            int newVis = mBaseSystemUiVisibility;
+//            if (!visible) {
+//                newVis |= SYSTEM_UI_FLAG_LOW_PROFILE | SYSTEM_UI_FLAG_FULLSCREEN;
+//            }
+//            final boolean changed = newVis == getSystemUiVisibility();
+//
+//            // Unschedule any pending event to hide navigation if we are
+//            // changing the visibility, or making the UI visible.
+//            if (changed || visible) {
+//                Handler h = getHandler();
+//                if (h != null) {
+//                    h.removeCallbacks(mNavHider);
+//                }
+//            }
+//
+//            // Set the new desired visibility.
+//            setSystemUiVisibility(newVis);
+//           // mTitleView.setVisibility(visible ? VISIBLE : INVISIBLE);
+//           // mSeekView.setVisibility(visible ? VISIBLE : INVISIBLE);
+//        }
         setContentView(R.layout.activity_article_detail);
 
         getLoaderManager().initLoader(0, null, this);
@@ -82,7 +115,8 @@ public class ArticleDetailActivity extends ActionBarActivity
         mUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onSupportNavigateUp();
+                setResult(Activity.RESULT_OK);
+                //onBackPressed();
             }
         });
 
@@ -105,6 +139,15 @@ public class ArticleDetailActivity extends ActionBarActivity
                 mSelectedItemId = mStartId;
             }
         }
+    }
+
+
+    @Override
+    public View onCreateView(String name, Context context, AttributeSet attrs) {
+
+
+
+        return super.onCreateView(name, context, attrs);
     }
 
     @Override

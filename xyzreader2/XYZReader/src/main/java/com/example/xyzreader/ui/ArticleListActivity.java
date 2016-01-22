@@ -10,7 +10,10 @@ import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.app.SharedElementCallback;
+import android.support.v4.util.Pair;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
@@ -18,10 +21,13 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
+import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -29,6 +35,8 @@ import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
 import com.example.xyzreader.data.UpdaterService;
+
+import java.util.List;
 
 /**
  * An activity representing a list of Articles. This activity has different presentations for
@@ -62,10 +70,15 @@ public class ArticleListActivity extends AppCompatActivity implements
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         getLoaderManager().initLoader(0, null, this);
 
+
         if (savedInstanceState == null) {
+            System.out.println("refeshing...");
             refresh();
+        }else {
+            System.out.println("not refreshing");
         }
     }
+
 
     private void refresh() {
         startService(new Intent(this, UpdaterService.class));
@@ -114,6 +127,7 @@ public class ArticleListActivity extends AppCompatActivity implements
         StaggeredGridLayoutManager sglm =
                 new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(sglm);
+
     }
 
     @Override
@@ -148,11 +162,22 @@ public class ArticleListActivity extends AppCompatActivity implements
                     Intent newActivity = new Intent(Intent.ACTION_VIEW,
                             ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition())));
                     ImageView imageView = (ImageView) findViewById(R.id.thumbnail);
+                    View transitionView = findViewById(R.id.recycler_view);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        System.out.println("VIEWid: " + view.toString());
+                        Pair pairs[] = new Pair[1];
+                        Pair<View,String> pair;
+                        pair = new Pair(view, "image_transition");
+
+                        pairs[0] = pair;
+
                         ActivityOptionsCompat options = ActivityOptionsCompat.
-                                makeSceneTransitionAnimation(ArticleListActivity.this, imageView, "image_transition");
+                                makeSceneTransitionAnimation(ArticleListActivity.this,pairs);
+
+
                         startActivity(newActivity, options.toBundle());
-                    }
+
+                        }
                     else {
                         startActivity(newActivity);
                     }
@@ -179,6 +204,7 @@ public class ArticleListActivity extends AppCompatActivity implements
                     ImageLoaderHelper.getInstance(ArticleListActivity.this).getImageLoader());
             holder.thumbnailView.setAspectRatio(mCursor.getFloat(ArticleLoader.Query.ASPECT_RATIO));
         }
+
 
         @Override
         public int getItemCount() {
