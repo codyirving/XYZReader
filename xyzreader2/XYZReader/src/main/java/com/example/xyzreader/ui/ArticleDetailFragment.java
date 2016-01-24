@@ -13,11 +13,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.graphics.Palette;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
+import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -59,6 +62,16 @@ public class ArticleDetailFragment extends Fragment implements
     private boolean mIsCard = false;
     private int mStatusBarFullOpacityBottom;
 
+
+    private static final String ARG_ALBUM_IMAGE_POSITION = "arg_album_image_position";
+    private static final String ARG_STARTING_ALBUM_IMAGE_POSITION = "arg_starting_album_image_position";
+
+    private ImageView mAlbumImage;
+    private int mStartingPosition;
+    private int mAlbumPosition;
+    private boolean mIsTransitioning;
+    private long mBackgroundImageFadeMillis;
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -66,9 +79,11 @@ public class ArticleDetailFragment extends Fragment implements
     public ArticleDetailFragment() {
     }
 
-    public static ArticleDetailFragment newInstance(long itemId) {
+    public static ArticleDetailFragment newInstance(long itemId, int position, int startingPosition) {
         Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
+        arguments.putInt(ARG_ALBUM_IMAGE_POSITION, position);
+        arguments.putInt(ARG_STARTING_ALBUM_IMAGE_POSITION, startingPosition); //for tracking return anim
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -77,12 +92,15 @@ public class ArticleDetailFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        System.out.println("NOW LETS DO THISSS");
         if (getArguments().containsKey(ARG_ITEM_ID)) {
             mItemId = getArguments().getLong(ARG_ITEM_ID);
         }
-
+        mStartingPosition = getArguments().getInt(ARG_STARTING_ALBUM_IMAGE_POSITION);
+        mAlbumPosition = getArguments().getInt(ARG_ALBUM_IMAGE_POSITION);
         mIsCard = getResources().getBoolean(R.bool.detail_is_card);
+        mIsTransitioning = savedInstanceState == null && mStartingPosition == mAlbumPosition;
+        mBackgroundImageFadeMillis = 1000;  //TODO: string resource
         mStatusBarFullOpacityBottom = getResources().getDimensionPixelSize(
                 R.dimen.detail_card_top_margin);
 
@@ -132,6 +150,19 @@ public class ArticleDetailFragment extends Fragment implements
 
         mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
+        mAlbumImage = mPhotoView;
+        if (mIsTransitioning) {
+            System.out.println("mIsTransitioning true!");
+            final ImageView backgroundImage = mPhotoView;
+            backgroundImage.setAlpha(0f);
+            getActivity().getWindow().getSharedElementEnterTransition().addListener(new TransitionListenerAdapter() {
+                @Override
+                public void onTransitionEnd(Transition transition) {
+                    backgroundImage.animate().setDuration(mBackgroundImageFadeMillis).alpha(1f);
+                }
+            });
+        }
+
 
         mStatusBarColorDrawable = new ColorDrawable(0);
 
@@ -147,9 +178,44 @@ public class ArticleDetailFragment extends Fragment implements
 
         bindViews();
         updateStatusBar();
+        startPostponedEnterTransition();
         return mRootView;
     }
+    private void startPostponedEnterTransition() {
+        System.out.println("mAlbPos: " + mAlbumPosition + "   mStartPos: " + mStartingPosition);
+        if (mAlbumPosition == mStartingPosition) {
 
+            System.out.println("Album pos and starting pos match! so Start postponed transition!");
+            mAlbumImage.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    mAlbumImage.getViewTreeObserver().removeOnPreDrawListener(this);
+                    getActivity().startPostponedEnterTransition();
+                    return true;
+                }
+            });
+        }
+    }
+    /**
+     * Returns the shared element that should be transitioned back to the previous Activity,
+     * or null if the view is not visible on the screen.
+     */
+    @Nullable
+    ImageView getAlbumImage() {
+        if (isViewInBounds(getActivity().getWindow().getDecorView(), mAlbumImage)) {
+            return mAlbumImage;
+        }
+        return null;
+    }
+
+    /**
+     * Returns true if {@param view} is contained within {@param container}'s bounds.
+     */
+    private static boolean isViewInBounds(@NonNull View container, @NonNull View view) {
+        Rect containerBounds = new Rect();
+        container.getHitRect(containerBounds);
+        return view.getLocalVisibleRect(containerBounds);
+    }
     private void updateStatusBar() {
         int color = 0;
         if (mPhotoView != null && mTopInset != 0 && mScrollY > 0) {
