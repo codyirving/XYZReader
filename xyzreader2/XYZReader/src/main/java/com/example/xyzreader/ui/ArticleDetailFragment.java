@@ -6,17 +6,25 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NavUtils;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
@@ -24,9 +32,12 @@ import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -84,6 +95,7 @@ public class ArticleDetailFragment extends Fragment implements
         arguments.putLong(ARG_ITEM_ID, itemId);
         arguments.putInt(ARG_ALBUM_IMAGE_POSITION, position);
         arguments.putInt(ARG_STARTING_ALBUM_IMAGE_POSITION, startingPosition); //for tracking return anim
+        System.out.println("ArticleDetailFrag newInstance: itemId: " + itemId + " position: " + position + " startingPosition: " + startingPosition);
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -128,40 +140,23 @@ public class ArticleDetailFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
-//        mDrawInsetsFrameLayout = (DrawInsetsFrameLayout)
-//                mRootView.findViewById(R.id.draw_insets_frame_layout);
-//        mDrawInsetsFrameLayout.setOnInsetsCallback(new DrawInsetsFrameLayout.OnInsetsCallback() {
-//            @Override
-//            public void onInsetsChanged(Rect insets) {
-//                mTopInset = insets.top;
-//            }
-//        });
-//
-//        mScrollView = (ObservableScrollView) mRootView.findViewById(R.id.scrollview);
-//        mScrollView.setCallbacks(new ObservableScrollView.Callbacks() {
-//            @Override
-//            public void onScrollChanged() {
-//                mScrollY = mScrollView.getScrollY();
-//                getActivityCast().onUpButtonFloorChanged(mItemId, ArticleDetailFragment.this);
-//                mPhotoContainerView.setTranslationY((int) (mScrollY - mScrollY / PARALLAX_FACTOR));
-//                updateStatusBar();
-//            }
-//        });
+
 
         mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
         mAlbumImage = mPhotoView;
-        if (mIsTransitioning) {
-            System.out.println("mIsTransitioning true!");
-            final ImageView backgroundImage = mPhotoView;
-            backgroundImage.setAlpha(0f);
-            getActivity().getWindow().getSharedElementEnterTransition().addListener(new TransitionListenerAdapter() {
-                @Override
-                public void onTransitionEnd(Transition transition) {
-                    backgroundImage.animate().setDuration(mBackgroundImageFadeMillis).alpha(1f);
-                }
-            });
-        }
+
+//        if (mIsTransitioning) {
+//            System.out.println("mIsTransitioning true!");
+//            final ImageView backgroundImage = mPhotoView;
+//            backgroundImage.setAlpha(0f);
+//            getActivity().getWindow().getSharedElementEnterTransition().addListener(new TransitionListenerAdapter() {
+//                @Override
+//                public void onTransitionEnd(Transition transition) {
+//                    backgroundImage.animate().setDuration(mBackgroundImageFadeMillis).alpha(1f);
+//                }
+//            });
+//        }
 
 
         mStatusBarColorDrawable = new ColorDrawable(0);
@@ -176,11 +171,29 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
 
-        bindViews();
-        updateStatusBar();
-        startPostponedEnterTransition();
+       // bindViews();
+       // updateStatusBar();
+        // startPostponedEnterTransition();
         return mRootView;
     }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+
+            case android.R.id.home:
+                System.out.println("RESPONDING TO UPBUTTON");
+                //NavUtils.navigateUpFromSameTask(getActivityCast());
+                getActivityCast().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+
+    }
+
     private void startPostponedEnterTransition() {
         System.out.println("mAlbPos: " + mAlbumPosition + "   mStartPos: " + mStartingPosition);
         if (mAlbumPosition == mStartingPosition) {
@@ -250,17 +263,36 @@ public class ArticleDetailFragment extends Fragment implements
             return;
         }
 
-        TextView titleView = (TextView) mRootView.findViewById(R.id.article_title);
+       // TextView titleView = (TextView) mRootView.findViewById(R.id.article_title);
         TextView bylineView = (TextView) mRootView.findViewById(R.id.article_byline);
-        bylineView.setMovementMethod(new LinkMovementMethod());
+      //  bylineView.setMovementMethod(new LinkMovementMethod());
         TextView bodyView = (TextView) mRootView.findViewById(R.id.article_body);
-        bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
+        bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Roboto-Regular.ttf"));
 
         if (mCursor != null) {
-            mRootView.setAlpha(0);
+
+            System.out.println("bindviews:mcursor!=Null");
+           // mRootView.setAlpha(0);
             mRootView.setVisibility(View.VISIBLE);
-            mRootView.animate().alpha(1);
-            titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
+           // mRootView.animate().alpha(1);
+            mAlbumImage.setTransitionName(mCursor.getString(ArticleLoader.Query.TITLE));
+
+            final Toolbar toolbar = (Toolbar) mRootView.findViewById(R.id.meta_bar);
+//            toolbar.setSubtitle(Html.fromHtml(
+//                    DateUtils.getRelativeTimeSpanString(
+//                            mCursor.getLong(ArticleLoader.Query.PUBLISHED_DATE),
+//                            System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
+//                            DateUtils.FORMAT_ABBREV_ALL).toString()
+//                            + " by <font color='#ffffff'>"
+//                            + mCursor.getString(ArticleLoader.Query.AUTHOR)
+//                            + "</font>"));
+            getActivityCast().setSupportActionBar(toolbar);
+            getActivityCast().getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+            CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout) mRootView.findViewById(R.id.photo_container);
+            collapsingToolbarLayout.setTitle(mCursor.getString(ArticleLoader.Query.TITLE));
+
+           // titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
             bylineView.setText(Html.fromHtml(
                     DateUtils.getRelativeTimeSpanString(
                             mCursor.getLong(ArticleLoader.Query.PUBLISHED_DATE),
@@ -279,13 +311,24 @@ public class ArticleDetailFragment extends Fragment implements
 
                                 Palette p = Palette.generate(bitmap, 12);
                                 mMutedColor = p.getDarkVibrantColor(0xFF333333);
+
+
                                 mPhotoView.setImageBitmap(imageContainer.getBitmap());
-                                mRootView.findViewById(R.id.meta_bar)
-                                        .setBackgroundColor(mMutedColor);
+//                                mRootView.findViewById(R.id.meta_bar)
+//                                        .setBackgroundColor(mMutedColor);
+                                ColorDrawable colorDrawable = new ColorDrawable(mMutedColor);
                                 mRootView.findViewById(R.id.photo_container).setBackgroundColor(mMutedColor);
-                                updateStatusBar();
+                                System.out.println("SettingScrimColor!:" + colorDrawable.getColor());
+                               //((CollapsingToolbarLayout) mRootView.findViewById(R.id.photo_container)).setStatusBarScrim(colorDrawable);
+                                ((CollapsingToolbarLayout) mRootView.findViewById(R.id.photo_container)).setContentScrim(colorDrawable);
+
+
+
+
+                                //updateStatusBar();
                             }
                         }
+
 
                         @Override
                         public void onErrorResponse(VolleyError volleyError) {
@@ -294,12 +337,23 @@ public class ArticleDetailFragment extends Fragment implements
                     });
         } else {
             mRootView.setVisibility(View.GONE);
-            titleView.setText("N/A");
+           // titleView.setText("N/A");
             bylineView.setText("N/A" );
             bodyView.setText("N/A");
         }
     }
 
+
+    public void setStatusBar() {
+        Window window = getActivityCast().getWindow();
+        // clear FLAG_TRANSLUCENT_STATUS flag:
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+        // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        System.out.println("SettingStatusBarColor!:" + mMutedColor);
+        window.setStatusBarColor(mMutedColor);
+    }
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
@@ -320,7 +374,8 @@ public class ArticleDetailFragment extends Fragment implements
             mCursor.close();
             mCursor = null;
         }
-
+        System.out.println("onLoadFinished:bindViews");
+        startPostponedEnterTransition();
         bindViews();
     }
 

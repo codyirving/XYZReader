@@ -79,7 +79,9 @@ public class ArticleListActivity extends AppCompatActivity implements
                         adapter.mCursor.moveToPosition(currentPosition);
                         String newTransitionName = adapter.mCursor.getString(ArticleLoader.Query.TITLE);
                         View newSharedElement = mRecyclerView.findViewWithTag(newTransitionName);
+                    System.out.println("newSharedElement: not null!: " + newSharedElement);
                         if(newSharedElement != null) {
+                            System.out.println("newTransitionName: " + newTransitionName);
                             names.clear();
                             names.add(newTransitionName);
                             sharedElements.clear();
@@ -91,9 +93,11 @@ public class ArticleListActivity extends AppCompatActivity implements
                 }
                 mTmpReenterState = null;
             }else {
+                System.out.println("mTmpReenterState: NULL!");
                 //if mTmpReenterState is null then activity is exiting. Taken straight from example
                 View navigationBar = findViewById(android.R.id.navigationBarBackground);
                 View statusBar = findViewById(android.R.id.statusBarBackground);
+                System.out.println("navigationBar: " +  navigationBar + "  statusBar: " + statusBar);
                 if (navigationBar != null) {
                     names.add(navigationBar.getTransitionName());
                     sharedElements.put(navigationBar.getTransitionName(), navigationBar);
@@ -118,6 +122,8 @@ public class ArticleListActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         System.out.println("onCreate:ArticleListActivity");
         super.onCreate(savedInstanceState);
+
+
         setContentView(R.layout.activity_article_list);
         setExitSharedElementCallback(mCallback);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -125,7 +131,17 @@ public class ArticleListActivity extends AppCompatActivity implements
         final View toolbarContainerView = findViewById(R.id.toolbar_container);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mIsRefreshing = false;
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
 
+
+
+
+        });
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         getLoaderManager().initLoader(0, null, this);
 
@@ -197,9 +213,11 @@ public class ArticleListActivity extends AppCompatActivity implements
         if (!loaderRestarting && startingPosition != currentPosition) {
             System.out.println("Scrolling to: " + currentPosition);
             mRecyclerView.scrollToPosition(currentPosition);
+
         }
         System.out.println("postponeEnterTransition");
         postponeEnterTransition();
+
         mRecyclerView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
@@ -210,12 +228,15 @@ public class ArticleListActivity extends AppCompatActivity implements
 
                 if(!loaderRestarting) {
 
-                    startPostponedEnterTransition(); //too fast
+                    startPostponedEnterTransition();
                 }
 
                 return true;
             }
         });
+
+
+
     }
 
 
@@ -227,15 +248,19 @@ public class ArticleListActivity extends AppCompatActivity implements
     private BroadcastReceiver mRefreshingReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            System.out.println("mRefreshingReceiver:ArticleListActivity");
+            System.out.println("mRefreshingReceiver:onReceive");
             if (UpdaterService.BROADCAST_ACTION_STATE_CHANGE.equals(intent.getAction())) {
                 mIsRefreshing = intent.getBooleanExtra(UpdaterService.EXTRA_REFRESHING, false);
+                System.out.println("updatRefreshingUI");
                 updateRefreshingUI();
             }
         }
+
     };
 
     private void updateRefreshingUI() {
+        System.out.println("updatRefreshingUI?: " + mIsRefreshing);
+
         mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
     }
 
@@ -260,9 +285,11 @@ public class ArticleListActivity extends AppCompatActivity implements
             if (startingPosition != currentPosition) {
                 System.out.println("Scrolling to: " + currentPosition);
                 mRecyclerView.scrollToPosition(currentPosition);
+
             }
-            startPostponedEnterTransition();
+
             loaderRestarting = false;
+            startPostponedEnterTransition();
         }
     }
 
@@ -331,10 +358,10 @@ public class ArticleListActivity extends AppCompatActivity implements
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public DynamicHeightNetworkImageView thumbnailView;
+
         public TextView titleView;
         public TextView subtitleView;
         private Cursor mCursor;
-        private int position;
 
         private int mAlbumPosition;
 
@@ -342,16 +369,27 @@ public class ArticleListActivity extends AppCompatActivity implements
 
 
 
+        public ViewHolder(View view) {
+
+            super(view);
+            System.out.println("ViewHolder():ArticleListActivity");
+            thumbnailView = (DynamicHeightNetworkImageView) view.findViewById(R.id.thumbnail);
+            titleView = (TextView) view.findViewById(R.id.article_title);
+            subtitleView = (TextView) view.findViewById(R.id.article_subtitle);
+            mAlbumImage = (ImageView) view.findViewById(R.id.thumbnail);
+            view.setOnClickListener(this);
+
+        }
 
 
 
         public void bind(int position, Cursor mCursor) {
             this.mCursor = mCursor;
-            this.position = position;
+
             System.out.println("onCreateViewHolder:mCursor.getPosition(): " + mCursor.getPosition());
             String title =  mCursor.getString(ArticleLoader.Query.TITLE);
-            mAlbumPosition = mCursor.getPosition();
-
+           // mAlbumPosition = mCursor.getPosition();
+            mAlbumPosition = position;
             mAlbumImage.setTransitionName(title);
             mAlbumImage.setTag(title);
 
@@ -362,15 +400,14 @@ public class ArticleListActivity extends AppCompatActivity implements
             public void onClick(View view) {
 
 
-            mCursor.moveToPosition(position);
+            mCursor.moveToPosition(mAlbumPosition);
             long itemID = mCursor.getLong(ArticleLoader.Query._ID);
                 Intent newActivity = new Intent(Intent.ACTION_VIEW,
                         ItemsContract.Items.buildItemUri(itemID));
                 System.out.println("Setting extra position: " + mAlbumPosition);
                 newActivity.putExtra(EXTRA_STARTING_ALBUM_POSITION, mAlbumPosition);
 
-                ImageView imageView = (ImageView) findViewById(R.id.thumbnail);
-                View transitionView = findViewById(R.id.recycler_view);
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 //                        System.out.println("VIEWid: " + view.toString());
 //                        Pair pairs[] = new Pair[1];
@@ -384,7 +421,7 @@ public class ArticleListActivity extends AppCompatActivity implements
 
                     if(!mIsDetailsActivityStarted) {
                         mIsDetailsActivityStarted = true;
-
+                        System.out.println("starting activity with transition bundle");
                         startActivity(newActivity, ActivityOptionsCompat.makeSceneTransitionAnimation(ArticleListActivity.this,
                                 mAlbumImage, mAlbumImage.getTransitionName()).toBundle());
 
@@ -392,6 +429,7 @@ public class ArticleListActivity extends AppCompatActivity implements
 
                 }
                 else {
+                    System.out.println("Not Lollipop");
                     startActivity(newActivity);
                 }
 
@@ -407,17 +445,6 @@ public class ArticleListActivity extends AppCompatActivity implements
 
 
 
-        public ViewHolder(View view) {
-
-            super(view);
-            System.out.println("ViewHolder():ArticleListActivity");
-            thumbnailView = (DynamicHeightNetworkImageView) view.findViewById(R.id.thumbnail);
-            titleView = (TextView) view.findViewById(R.id.article_title);
-            subtitleView = (TextView) view.findViewById(R.id.article_subtitle);
-            mAlbumImage = thumbnailView;
-            view.setOnClickListener(this);
-
-        }
 
 
 

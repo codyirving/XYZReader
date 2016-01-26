@@ -53,8 +53,8 @@ public class ArticleDetailActivity extends ActionBarActivity
 
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
-    private View mUpButtonContainer;
-    private View mUpButton;
+   // private View mUpButtonContainer;
+   // private View mUpButton;
 
 
 
@@ -65,18 +65,25 @@ public class ArticleDetailActivity extends ActionBarActivity
     private final android.app.SharedElementCallback mCallback = new android.app.SharedElementCallback() {
         @Override
         public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
+            System.out.println("onMapSharedElements");
             if (mIsReturning) {
+                System.out.println("mIsReturning");
                 ImageView sharedElement = mCurrentDetailsFragment.getAlbumImage();
                 if (sharedElement == null) {
+
+                    System.out.println("sharedElement == null -- clear shared element");
                     // If shared element is null, then it has been scrolled off screen and
                     // no longer visible. In this case we cancel the shared element transition by
                     // removing the shared element from the shared elements map.
                     names.clear();
                     sharedElements.clear();
                 } else if (mStartingPosition != mCurrentPosition) {
+                    System.out.println("sharedElement != null, replace with sharedElement on pageswipe ---- " + sharedElement.getTransitionName());
                     // If the user has swiped to a different ViewPager page, then we need to
                     // remove the old shared element and replace it with the new shared element
                     // that should be transitioned instead.
+
+
                     names.clear();
                     names.add(sharedElement.getTransitionName());
                     sharedElements.clear();
@@ -103,37 +110,13 @@ public class ArticleDetailActivity extends ActionBarActivity
                             View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             );
         }
-        System.out.println("LETS DO THIS");
-//        Runnable mNavHider = new Runnable() {
-//            @Override public void run() {
-//                setNavVisibility(false);
-//            }
-//        };
-//        void setNavVisibility(boolean visible) {
-//            int newVis = mBaseSystemUiVisibility;
-//            if (!visible) {
-//                newVis |= SYSTEM_UI_FLAG_LOW_PROFILE | SYSTEM_UI_FLAG_FULLSCREEN;
-//            }
-//            final boolean changed = newVis == getSystemUiVisibility();
-//
-//            // Unschedule any pending event to hide navigation if we are
-//            // changing the visibility, or making the UI visible.
-//            if (changed || visible) {
-//                Handler h = getHandler();
-//                if (h != null) {
-//                    h.removeCallbacks(mNavHider);
-//                }
-//            }
-//
-//            // Set the new desired visibility.
-//            setSystemUiVisibility(newVis);
-//           // mTitleView.setVisibility(visible ? VISIBLE : INVISIBLE);
-//           // mSeekView.setVisibility(visible ? VISIBLE : INVISIBLE);
-//        }
+
+
         setContentView(R.layout.activity_article_detail);
 
         postponeEnterTransition();
         setEnterSharedElementCallback(mCallback);
+
         mStartingPosition = getIntent().getIntExtra(EXTRA_STARTING_ALBUM_POSITION, 0);
         if (savedInstanceState == null) {
             mCurrentPosition = mStartingPosition;
@@ -153,10 +136,10 @@ public class ArticleDetailActivity extends ActionBarActivity
             @Override
             public void onPageScrollStateChanged(int state) {
                 super.onPageScrollStateChanged(state);
-
-                mUpButton.animate()
-                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
-                        .setDuration(300);
+//
+//                mUpButton.animate()
+//                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
+//                        .setDuration(300);
             }
 
             @Override
@@ -170,33 +153,35 @@ public class ArticleDetailActivity extends ActionBarActivity
             }
         });
 
-        mUpButtonContainer = findViewById(R.id.up_container);
-
-        mUpButton = findViewById(R.id.action_up);
-        mUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setResult(Activity.RESULT_OK); //needed to ensure onActivityReenter
-                onBackPressed();
-            }
-        });
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-                @Override
-                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
-                    view.onApplyWindowInsets(windowInsets);
-                    mTopInset = windowInsets.getSystemWindowInsetTop();
-                    mUpButtonContainer.setTranslationY(mTopInset);
-                    updateUpButtonPosition();
-                    return windowInsets;
-                }
-            });
-        }
+//        mUpButtonContainer = findViewById(R.id.up_container);
+//
+//        mUpButton = findViewById(R.id.action_up);
+//        mUpButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                setResult(Activity.RESULT_OK); //needed to ensure onActivityReenter
+//                onBackPressed();
+//            }
+//        });
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+//                @Override
+//                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
+//                    view.onApplyWindowInsets(windowInsets);
+//                    mTopInset = windowInsets.getSystemWindowInsetTop();
+//                    mUpButtonContainer.setTranslationY(mTopInset);
+//                    updateUpButtonPosition();
+//                    return windowInsets;
+//                }
+//            });
+//        }
 
         if (savedInstanceState == null) {
             if (getIntent() != null && getIntent().getData() != null) {
+
                 mStartId = ItemsContract.Items.getItemId(getIntent().getData());
+                System.out.println("gotIntentData: " + mStartId);
                 mSelectedItemId = mStartId;
             }
         }
@@ -219,13 +204,6 @@ public class ArticleDetailActivity extends ActionBarActivity
         super.finishAfterTransition();
     }
 
-    @Override
-    public View onCreateView(String name, Context context, AttributeSet attrs) {
-
-
-
-        return super.onCreateView(name, context, attrs);
-    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -267,9 +245,9 @@ public class ArticleDetailActivity extends ActionBarActivity
     }
 
     private void updateUpButtonPosition() {
-        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
-        System.out.println("mTopInset: " + mTopInset + " mUpButtonHeight: " + mUpButton.getHeight() + " mSelectedItemUpButtonFloor: " + mSelectedItemUpButtonFloor);
-        mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
+      //  int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
+       // System.out.println("mTopInset: " + mTopInset + " mUpButtonHeight: " + mUpButton.getHeight() + " mSelectedItemUpButtonFloor: " + mSelectedItemUpButtonFloor);
+       // mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
     }
 
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
@@ -281,16 +259,20 @@ public class ArticleDetailActivity extends ActionBarActivity
         public void setPrimaryItem(ViewGroup container, int position, Object object) {
             super.setPrimaryItem(container, position, object);
             mCurrentDetailsFragment = (ArticleDetailFragment) object;
-            if (mCurrentDetailsFragment != null) {
-                mSelectedItemUpButtonFloor = mCurrentDetailsFragment.getUpButtonFloor();
-                updateUpButtonPosition();
+
+            //call to set status bar of ArticleDetailFragment only when visible in viewpager
+            //
+            if(object instanceof ArticleDetailFragment) {
+                mCurrentDetailsFragment.setStatusBar();
             }
+
+
         }
 
         @Override
         public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
-            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID), position, mCurrentPosition);
+            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID), position, mStartingPosition);
         }
 
         @Override
