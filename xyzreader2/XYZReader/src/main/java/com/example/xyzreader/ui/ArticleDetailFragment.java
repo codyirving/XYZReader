@@ -195,6 +195,7 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     private void startPostponedEnterTransition() {
+
         System.out.println("mAlbPos: " + mAlbumPosition + "   mStartPos: " + mStartingPosition);
         if (mAlbumPosition == mStartingPosition) {
 
@@ -203,7 +204,9 @@ public class ArticleDetailFragment extends Fragment implements
                 @Override
                 public boolean onPreDraw() {
                     mAlbumImage.getViewTreeObserver().removeOnPreDrawListener(this);
-                    getActivity().startPostponedEnterTransition();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        getActivityCast().startPostponedEnterTransition();
+                    }
                     return true;
                 }
             });
@@ -275,8 +278,10 @@ public class ArticleDetailFragment extends Fragment implements
            // mRootView.setAlpha(0);
             mRootView.setVisibility(View.VISIBLE);
            // mRootView.animate().alpha(1);
-            mAlbumImage.setTransitionName(mCursor.getString(ArticleLoader.Query.TITLE));
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mAlbumImage.setTransitionName(mCursor.getString(ArticleLoader.Query.TITLE));
+            }
             final Toolbar toolbar = (Toolbar) mRootView.findViewById(R.id.meta_bar);
 //            toolbar.setSubtitle(Html.fromHtml(
 //                    DateUtils.getRelativeTimeSpanString(
@@ -345,14 +350,19 @@ public class ArticleDetailFragment extends Fragment implements
 
 
     public void setStatusBar() {
-        Window window = getActivityCast().getWindow();
-        // clear FLAG_TRANSLUCENT_STATUS flag:
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
-        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        System.out.println("SettingStatusBarColor!:" + mMutedColor);
-        window.setStatusBarColor(mMutedColor);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getActivityCast().getWindow();
+            // clear FLAG_TRANSLUCENT_STATUS flag:
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+            // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+            //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            System.out.println("SettingStatusBarColor!:" + mMutedColor);
+
+
+            window.setStatusBarColor(mMutedColor);
+        }
     }
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -375,7 +385,9 @@ public class ArticleDetailFragment extends Fragment implements
             mCursor = null;
         }
         System.out.println("onLoadFinished:bindViews");
-        startPostponedEnterTransition();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startPostponedEnterTransition();
+        }
         bindViews();
     }
 

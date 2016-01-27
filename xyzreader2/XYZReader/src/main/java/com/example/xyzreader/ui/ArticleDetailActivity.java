@@ -7,6 +7,7 @@ import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -62,32 +63,35 @@ public class ArticleDetailActivity extends ActionBarActivity
 
     private static final String STATE_CURRENT_PAGE_POSITION = "state_current_page_position";
 
-    private final android.app.SharedElementCallback mCallback = new android.app.SharedElementCallback() {
+    private final android.support.v4.app.SharedElementCallback mCallback = new android.support.v4.app.SharedElementCallback() {
         @Override
         public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
             System.out.println("onMapSharedElements");
             if (mIsReturning) {
-                System.out.println("mIsReturning");
-                ImageView sharedElement = mCurrentDetailsFragment.getAlbumImage();
-                if (sharedElement == null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    System.out.println("mIsReturning");
+                    ImageView sharedElement = mCurrentDetailsFragment.getAlbumImage();
 
-                    System.out.println("sharedElement == null -- clear shared element");
-                    // If shared element is null, then it has been scrolled off screen and
-                    // no longer visible. In this case we cancel the shared element transition by
-                    // removing the shared element from the shared elements map.
-                    names.clear();
-                    sharedElements.clear();
-                } else if (mStartingPosition != mCurrentPosition) {
-                    System.out.println("sharedElement != null, replace with sharedElement on pageswipe ---- " + sharedElement.getTransitionName());
-                    // If the user has swiped to a different ViewPager page, then we need to
-                    // remove the old shared element and replace it with the new shared element
-                    // that should be transitioned instead.
+                    if (sharedElement == null) {
+
+                        System.out.println("sharedElement == null -- clear shared element");
+                        // If shared element is null, then it has been scrolled off screen and
+                        // no longer visible. In this case we cancel the shared element transition by
+                        // removing the shared element from the shared elements map.
+                        names.clear();
+                        sharedElements.clear();
+                    } else if (mStartingPosition != mCurrentPosition) {
+                        System.out.println("sharedElement != null, replace with sharedElement on pageswipe ---- " + sharedElement.getTransitionName());
+                        // If the user has swiped to a different ViewPager page, then we need to
+                        // remove the old shared element and replace it with the new shared element
+                        // that should be transitioned instead.
 
 
-                    names.clear();
-                    names.add(sharedElement.getTransitionName());
-                    sharedElements.clear();
-                    sharedElements.put(sharedElement.getTransitionName(), sharedElement);
+                        names.clear();
+                        names.add(sharedElement.getTransitionName());
+                        sharedElements.clear();
+                        sharedElements.put(sharedElement.getTransitionName(), sharedElement);
+                    }
                 }
             }
         }
@@ -113,8 +117,9 @@ public class ArticleDetailActivity extends ActionBarActivity
 
 
         setContentView(R.layout.activity_article_detail);
-
-        postponeEnterTransition();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            postponeEnterTransition();
+        }
         setEnterSharedElementCallback(mCallback);
 
         mStartingPosition = getIntent().getIntExtra(EXTRA_STARTING_ALBUM_POSITION, 0);
@@ -149,7 +154,7 @@ public class ArticleDetailActivity extends ActionBarActivity
                 }
                 mCurrentPosition = position;
                 mSelectedItemId = mCursor.getLong(ArticleLoader.Query._ID);
-                updateUpButtonPosition();
+                //updateUpButtonPosition();
             }
         });
 
@@ -183,6 +188,7 @@ public class ArticleDetailActivity extends ActionBarActivity
                 mStartId = ItemsContract.Items.getItemId(getIntent().getData());
                 System.out.println("gotIntentData: " + mStartId);
                 mSelectedItemId = mStartId;
+
             }
         }
     }
@@ -190,6 +196,8 @@ public class ArticleDetailActivity extends ActionBarActivity
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        System.out.println("ADA: onSaveInstanceState");
+
         outState.putInt(STATE_CURRENT_PAGE_POSITION, mCurrentPosition);
     }
 
@@ -237,18 +245,7 @@ public class ArticleDetailActivity extends ActionBarActivity
         mPagerAdapter.notifyDataSetChanged();
     }
 
-    public void onUpButtonFloorChanged(long itemId, ArticleDetailFragment fragment) {
-        if (itemId == mSelectedItemId) {
-            mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
-            updateUpButtonPosition();
-        }
-    }
 
-    private void updateUpButtonPosition() {
-      //  int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
-       // System.out.println("mTopInset: " + mTopInset + " mUpButtonHeight: " + mUpButton.getHeight() + " mSelectedItemUpButtonFloor: " + mSelectedItemUpButtonFloor);
-       // mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
-    }
 
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
         public MyPagerAdapter(FragmentManager fm) {
@@ -262,7 +259,8 @@ public class ArticleDetailActivity extends ActionBarActivity
 
             //call to set status bar of ArticleDetailFragment only when visible in viewpager
             //
-            if(object instanceof ArticleDetailFragment) {
+
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && object instanceof ArticleDetailFragment) {
                 mCurrentDetailsFragment.setStatusBar();
             }
 
