@@ -12,9 +12,6 @@
     android:focusable="true"
     android:foreground="?selectableItemBackground"
     app:cardCornerRadius="4dp"
-
-
-
     >
 
     <LinearLayout
@@ -29,7 +26,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-
             android:background="@color/photo_placeholder"
             tools:ignore="ContentDescription"
              />

@@ -17,12 +17,23 @@
 
 <resources>
 
-    <style name="Theme.Bacon" parent="@style/Theme.AppCompat.Light.NoActionBar">
-
+    <style name="AppTheme.Main" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/theme_primary</item>
     </style>
 
-    <style name="Theme.Bacon.Detail">
-        <item name="android:statusBarColor">@android:color/transparent</item>
+    <style name="AppTheme.Details" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <!-- TODO: figure out if there is a way to use translucent status w/o the abrupt
+             shift from black to translucent status bar while adding the status bar bg
+             as a shared element. -->
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowEnterTransition">@transition/details_window_enter_transition</item>
+        <item name="android:windowReturnTransition">@transition/details_window_return_transition</item>
+    </style>
+    <style name="AppBarText" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">36sp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textStyle">bold</item>
+
     </style>
 
 </resources>

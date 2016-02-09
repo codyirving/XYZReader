@@ -1,29 +1,21 @@
 package com.example.xyzreader.ui;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.LoaderManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v13.app.FragmentStatePagerAdapter;
-import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.app.SharedElementCallback;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
-import android.transition.TransitionManager;
-import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowInsets;
 import android.widget.ImageView;
 
 import com.example.xyzreader.R;
@@ -33,10 +25,8 @@ import com.example.xyzreader.data.ItemsContract;
 import java.util.List;
 import java.util.Map;
 
-
 import static com.example.xyzreader.ui.ArticleListActivity.EXTRA_CURRENT_ALBUM_POSITION;
 import static com.example.xyzreader.ui.ArticleListActivity.EXTRA_STARTING_ALBUM_POSITION;
-
 
 
 /**
@@ -45,47 +35,37 @@ import static com.example.xyzreader.ui.ArticleListActivity.EXTRA_STARTING_ALBUM_
 public class ArticleDetailActivity extends ActionBarActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String STATE_CURRENT_PAGE_POSITION = "state_current_page_position";
     private Cursor mCursor;
     private long mStartId;
-
     private long mSelectedItemId;
-    private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
-    private int mTopInset;
-
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
-   // private View mUpButtonContainer;
-   // private View mUpButton;
-
-
-
-
-
-    private static final String STATE_CURRENT_PAGE_POSITION = "state_current_page_position";
-
+    private ArticleDetailFragment mCurrentDetailsFragment;
+    private int mCurrentPosition;
+    private int mStartingPosition;
+    private boolean mIsReturning;
     private final android.support.v4.app.SharedElementCallback mCallback = new android.support.v4.app.SharedElementCallback() {
         @Override
         public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
-            System.out.println("onMapSharedElements");
+
             if (mIsReturning) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    System.out.println("mIsReturning");
+
                     ImageView sharedElement = mCurrentDetailsFragment.getAlbumImage();
 
                     if (sharedElement == null) {
 
-                        System.out.println("sharedElement == null -- clear shared element");
                         // If shared element is null, then it has been scrolled off screen and
                         // no longer visible. In this case we cancel the shared element transition by
                         // removing the shared element from the shared elements map.
                         names.clear();
                         sharedElements.clear();
                     } else if (mStartingPosition != mCurrentPosition) {
-                        System.out.println("sharedElement != null, replace with sharedElement on pageswipe ---- " + sharedElement.getTransitionName());
+
                         // If the user has swiped to a different ViewPager page, then we need to
                         // remove the old shared element and replace it with the new shared element
                         // that should be transitioned instead.
-
 
                         names.clear();
                         names.add(sharedElement.getTransitionName());
@@ -97,21 +77,13 @@ public class ArticleDetailActivity extends ActionBarActivity
         }
     };
 
-
-
-
-    private ArticleDetailFragment mCurrentDetailsFragment;
-    private int mCurrentPosition;
-    private int mStartingPosition;
-    private boolean mIsReturning;
-
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().getDecorView().setSystemUiVisibility(
-                //    View.SYSTEM_UI_FLAG_FULLSCREEN | // removed per forum advice
-                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    //    View.SYSTEM_UI_FLAG_FULLSCREEN | // removed per forum advice
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             );
         }
 
@@ -184,9 +156,7 @@ public class ArticleDetailActivity extends ActionBarActivity
 
         if (savedInstanceState == null) {
             if (getIntent() != null && getIntent().getData() != null) {
-
                 mStartId = ItemsContract.Items.getItemId(getIntent().getData());
-                System.out.println("gotIntentData: " + mStartId);
                 mSelectedItemId = mStartId;
 
             }
@@ -196,14 +166,11 @@ public class ArticleDetailActivity extends ActionBarActivity
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        System.out.println("ADA: onSaveInstanceState");
-
         outState.putInt(STATE_CURRENT_PAGE_POSITION, mCurrentPosition);
     }
 
     @Override
     public void finishAfterTransition() {
-        System.out.println("finishAfterTransition");
         mIsReturning = true;
         Intent data = new Intent();
         data.putExtra(EXTRA_STARTING_ALBUM_POSITION, mStartingPosition);
@@ -222,7 +189,6 @@ public class ArticleDetailActivity extends ActionBarActivity
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         mCursor = cursor;
         mPagerAdapter.notifyDataSetChanged();
-
         // Select the start ID
         if (mStartId > 0) {
             mCursor.moveToFirst();
@@ -246,7 +212,6 @@ public class ArticleDetailActivity extends ActionBarActivity
     }
 
 
-
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
         public MyPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -259,12 +224,9 @@ public class ArticleDetailActivity extends ActionBarActivity
 
             //call to set status bar of ArticleDetailFragment only when visible in viewpager
             //
-
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && object instanceof ArticleDetailFragment) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && object instanceof ArticleDetailFragment) {
                 mCurrentDetailsFragment.setStatusBar();
             }
-
-
         }
 
         @Override
